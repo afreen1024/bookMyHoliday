@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="2cd2e286-0bde-4f45-8533-924676a76745" >
+		<wsc:connection wsdlLocation="api\Hotel.wsdl" service="Hotels" port="HotelsSoap" address="http://localhost:59006/Hotels.asmx" />
+	</wsc:config>
+	<flow name="getHotels" doc:id="126c14ef-63d8-4962-b8ac-d84954272fdd" >
+		<ee:transform doc:name="Transform Message" doc:id="265e70e4-178c-4b02-a307-9ceceb89283d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+
+---
+
+"envelop":{
+	"Body":payload
+	}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume operation="GetHotels" doc:name="getHotelsConsume" doc:id="36ff157f-32db-4c39-9843-ca56ffee1855" config-ref="Web_Service_Consumer_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="edf7d775-2b68-4c18-b888-51b210b1883a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0ns ns0 http://tempuri.org/
+
+output application/xml
+
+---
+"Body":payload.body.ns0#GetHotelsResponse.ns0#GetHotelsResult]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="bookHotel" doc:id="05be3653-5d19-4352-92d2-e2bcfde9395e" >
+		<ee:transform doc:name="Transform Message" doc:id="6786b647-c105-45c2-b078-fd767db9f453">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+"hello":payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume operation="BookHotel" doc:name="Consume" doc:id="04f8fc6f-028f-44c6-beae-95637a2d29d5" config-ref="Web_Service_Consumer_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="e4a2a623-17f9-400c-8602-cf7f3dfc3860">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://tempuri.org/
+---
+{
+	ns0#BookHotel: {
+		ns0#hotelid: payload.body.ns0#BookHotelResponse.ns0#BookHotelResult.ns0#Hotel.ns0#HotelId,
+		ns0#noGuests: payload.body.ns0#BookHotelResponse.ns0#BookHotelResult.ns0#Hotel.ns0#noGuests,
+		ns0#checkindate: payload.body.ns0#BookHotelResponse.ns0#BookHotelResult.ns0#Hotel.ns0#checkindate,
+		ns0#checkoutdate: payload.body.ns0#BookHotelResponse.ns0#BookHotelResult.ns0#Hotel.ns0#checkoutdate,
+		ns0#roomType: payload.body.ns0#BookHotelResponse.ns0#BookHotelResult.ns0#Hotel.ns0#roomType,
+		ns0#numOfRooms: payload.body.ns0#BookHotelResponse.ns0#BookHotelResult.ns0#Hotel.ns0#numOfRooms
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

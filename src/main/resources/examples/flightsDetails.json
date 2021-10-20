@@ -1,0 +1,22 @@
+[{
+	"flightsID": 101,
+	"price": "400.00",
+	"departureDate": "2016/03/20",
+	"origni": "MUA",
+	"destination": "Pune",
+	"emptySeats": 0,
+        "availableSeats":150,
+        "class":"economy"
+	
+}, {
+	"flightsID": 102,
+	"price": "400.00",
+	"departureDate": "2016/03/20",
+	"origni": "Delhi",
+	"destination": "Pune",
+	"emptySeats": 0,
+        "availableSeats":150,
+        "class":"economy"
+	
+}
+]

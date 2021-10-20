@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="abe79701-f60d-4894-b98a-e1a27a5944aa" >
+		<file:connection workingDir="${car.carDir}" />
+	</file:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="e4e56bb7-8667-420c-9b1e-cdc1ce85ddfa" >
+		<file:connection workingDir="${car.carBook}" />
+	</file:config>
+	<flow name="getCar" doc:id="a303a1fd-1309-4b34-99b7-fab31046c77e" >
+		
+		<http:listener doc:name="Listener" doc:id="2b62ff44-072a-46b5-9aee-12380c99cdb4" config-ref="api-httpListenerConfig" path="/cars"/>
+		<set-variable value="#[attributes.queryParams.source]" doc:name="vsource" doc:id="76e9ef97-2348-4b7c-b059-6f103e5af521" variableName="vsource"/>
+		<set-variable value="#[attributes.queryParams.destination]" doc:name="vdest" doc:id="5723c738-90db-4441-ac9f-a8e5a4f6c23a" variableName="vdest"/>
+		<try doc:name="Try" doc:id="075359b7-3186-4314-9b5a-d612ac191d57" >
+			<file:read doc:id="68acaf62-0179-4723-933b-3282a5059a85" config-ref="File_Config" path="AvailableCarBookingDetails.csv" />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="8a28e1ad-6216-44d9-adc1-608f076ab8d8" type="FILE:ACCESS_DENIED, FILE:CONNECTIVITY, FILE:ILLEGAL_PATH">
+					<logger level="INFO" doc:name="Logger" doc:id="59225f25-27e1-4f72-ad18-c7cf6851e922" message="in file try bloclk" />
+					<set-payload value='#["Unable to connect Car partners"]' doc:name="Set Payload" doc:id="8121006a-34e9-4d6e-a970-7b02b1da7ff1" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Transform Message" doc:id="55821cd2-0387-45b7-9ff3-91802322299d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	"id": payload01.id,
+	"source": payload01."source",
+	"destination": payload01."destination",
+	"cartype": payload01."cartype",
+	"carmodel": payload01."carmodel",
+	"price": payload01."price",
+	"partnerName": payload01."partnerName",
+	"contact": payload01."contact",
+	"isbooked": payload01."isbooked"
+} 
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="6935317d-76a6-4e87-9124-8ee6542627a4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+ 
+
+---
+ 
+if ( !isEmpty(vars.vsource) and !isEmpty(vars.vdest)  ) 
+ payload filter (value, index) -> 
+    ((value.source == vars.vsource) and (value.destination == vars.vdest ) )
+    
+    else if ( !isEmpty(vars.vsource) or !isEmpty(vars.vdest)  ) 
+ payload filter (value, index) -> 
+    ((value.source == vars.vsource) or (value.destination == vars.vdest ) )
+    else
+    payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="43340730-0c23-4efd-9408-035021e1c7f4" message="#[payload]"/>
+	</flow>
+	<flow name="bookCar" doc:id="9785a7a5-5afc-4e23-8955-1f6a6b43ee2e" >
+		<http:listener doc:name="Listener" doc:id="dce00b41-14cb-4f49-9d99-f49bc8eba0ae" config-ref="api-httpListenerConfig" path="/bookcars" allowedMethods="POST"/>
+		<file:write doc:name="Write" doc:id="577a48b2-46e9-4a40-8751-b07d574879ac" config-ref="File_Config1" path="Booked.csv" mode="APPEND">
+		</file:write>
+	
+</flow>
+	<flow name="Post-hourly" doc:id="b62d16a3-dd86-42e8-a358-d3d8d65960d6" >
+		<scheduler doc:name="Scheduler" doc:id="ac39f8b3-5f21-4871-9952-4525d49b5b41" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="1" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<try doc:name="Try" doc:id="9c111856-2056-42fa-ad2b-8f42d79536f2" >
+			<file:copy doc:name="Copy" doc:id="457f6ea1-9eea-4a7a-b685-fb349753f1e8" config-ref="File_Config" sourcePath="${car.carBook}/Booked.csv" targetPath="${car.carShare}" renameTo="Posted.csv" overwrite="true" />
+			<error-handler>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a01de300-eb6a-4a7d-b9f0-a7d135dcf7b4" >
+					<logger level="INFO" doc:name="Logger" doc:id="252d4e92-8c41-4eb0-bc2b-124b8272c79a" message="unable to connect to car partners"/>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="85b4ba40-1ee6-41c1-85f5-aee24433fcc4" >
+				<logger level="INFO" doc:name="Logger" doc:id="afc14a45-b9fb-4cf9-ba50-b29603367ba7" message="scheduler error"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	
+	
+	
+	
+	
+	</mule>
