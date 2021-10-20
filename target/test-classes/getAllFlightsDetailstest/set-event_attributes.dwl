@@ -1,0 +1,30 @@
+{
+  "headers": {
+    "client_id": "92e7aea1eaaf4ee9b1b5e1dbab45fbe7",
+    "client_secret": "7D6A3e3Ef5214Fee82A6Ff13D83Fe4cc",
+    "content-type": "application/json",
+    "user-agent": "PostmanRuntime/7.28.4",
+    "accept": "*/*",
+    "postman-token": "eda54850-88de-4af5-a14f-12312b44d2d1",
+    "host": "localhost:8085",
+    "accept-encoding": "gzip, deflate, br",
+    "connection": "keep-alive",
+    "content-length": "142"
+  },
+  "clientCertificate": null,
+  "method": "POST",
+  "scheme": "http",
+  "queryParams": {},
+  "requestUri": "/api/flights",
+  "queryString": "",
+  "version": "HTTP/1.1",
+  "maskedRequestPath": "/flights",
+  "listenerPath": "/api/*",
+  "relativePath": "/api/flights",
+  "localAddress": "/127.0.0.1:8085",
+  "uriParams": {},
+  "rawRequestUri": "/api/flights",
+  "rawRequestPath": "/api/flights",
+  "remoteAddress": "/127.0.0.1:55540",
+  "requestPath": "/api/flights"
+}

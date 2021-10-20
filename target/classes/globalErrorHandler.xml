@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<error-handler name="globalErrorHandlerError_Handler" doc:id="782231e3-2ed8-4a20-88a0-96da7393d2fe" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="DBErrorValidation" doc:id="5bb8d342-9b86-4acc-b620-4510c4df8989" type="DB:BAD_SQL_SYNTAX, DB:CONNECTIVITY, DB:QUERY_EXECUTION, DB:RETRY_EXHAUSTED">
+			<logger level="INFO" doc:name="Logger" doc:id="d220de80-ced4-4705-a997-016814953d48" message="#[payload]"/>
+			<set-payload value="DB : Something went wrong" doc:name="DB Error " doc:id="9983c78b-09ac-47d2-a9e9-67d589ecbeb2" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue OS" doc:id="34fc3eb3-8502-45ed-a58a-cfa3bef27842" type="OS:INVALID_KEY, OS:KEY_ALREADY_EXISTS, OS:KEY_NOT_FOUND, OS:NULL_VALUE, OS:STORE_NOT_AVAILABLE">
+			<logger level="INFO" doc:name="Logger" doc:id="1693cd95-0cd6-4c7d-bed4-1e9af1bfd85b" message="#[payload]"/>
+			<set-payload value="OS : Something went wrong" doc:name="Object Store" doc:id="ab3faa85-4567-4cf9-b372-14e2c9ef8438" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5963a82e-ab26-42c6-b50d-c07b4cf40a81" type="ANY">
+			<logger level="INFO" doc:name="Logger" doc:id="b597032b-bb75-4ddf-973b-e4fc62b2fdd6" message="#[payload]"/>
+			<set-payload value="Expression : Something went wrong" doc:name="Dataweave Error" doc:id="3ee1e8f8-a99d-4d97-9526-9798ccd3a61f" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue :WSC" doc:id="f87a36aa-337a-4be4-95d3-283080dd8d00" type="WSC:BAD_REQUEST, WSC:BAD_RESPONSE, WSC:CANNOT_DISPATCH, WSC:CONNECTIVITY, WSC:ENCODING, WSC:INVALID_WSDL, WSC:RETRY_EXHAUSTED, WSC:SOAP_FAULT, WSC:TIMEOUT">
+			<logger level="INFO" doc:name="Logger" doc:id="7549c99e-0be4-42c8-8714-e26dc4c73906" message="#[payload]"/>
+			<set-payload value="Something went wrong" doc:name="WSCError" doc:id="c2dbbdc3-a3b0-419b-af20-814044cdbf6f" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="FileError" doc:id="f418a99b-8800-4a20-8a63-ac3fee69085b" type="FILE:ACCESS_DENIED, FILE:CONNECTIVITY, FILE:FILE_ALREADY_EXISTS, FILE:FILE_LOCK, FILE:ILLEGAL_CONTENT, FILE:ILLEGAL_PATH, FILE:RETRY_EXHAUSTED">
+			<logger level="INFO" doc:name="Logger" doc:id="cf15f9a7-fe48-481c-a87a-bdb4c0ea35d4" message="#[payload]"/>
+			<set-payload value="Something went wrong" doc:name="FileErrorHandling" doc:id="63578e68-9817-4685-b650-e6386c13d859" />
+		</on-error-continue>
+	</error-handler>
+</mule>

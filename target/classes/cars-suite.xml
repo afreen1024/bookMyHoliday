@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="cars-suite.xml" />
+	<munit:test name="getCar-test" doc:id="b823913a-a8cb-4713-8549-b3d8707acaf3" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock vdest" doc:id="1bce8b2a-5d27-480c-b3a3-bae2378dd283" processor="set-variable">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="5723c738-90db-4441-ac9f-a8e5a4f6c23a" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="vdest" value="#[output application/java --- readUrl('classpath://getCartest\mock_variable_.dwl')]" mediaType="application/java" encoding="UTF-8" />
+						<munit-tools:variable key="vsource" value="#[output application/java --- readUrl('classpath://getCartest\mock_variable_1.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock vsource" doc:id="b8df76e1-5d83-477f-a98b-a253667b2fb7" processor="set-variable">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="76e9ef97-2348-4b7c-b059-6f103e5af521" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="vsource" value="#[output application/java --- readUrl('classpath://getCartest\mock_variable_2.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="698e6391-cf26-4922-a83f-fd7233fc5790" >
+				<munit:payload value="#[readUrl('classpath://getCartest\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://getCartest\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to getCar" doc:id="c2aa91fb-ddfc-4ad0-8a12-04b17603fe5e" name="getCar"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="43479dec-0680-433e-8651-eb5c34abbe6e" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import getCartest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify Transform Message" doc:id="264a3412-55d4-4660-a19c-f8b587d65ac2" processor="ee:transform" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="6935317d-76a6-4e87-9124-8ee6542627a4" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="Verify Transform Message" doc:id="1b152654-1c59-4426-bcc4-41f43ca366fa" processor="ee:transform" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="55821cd2-0387-45b7-9ff3-91802322299d" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="Verify Read" doc:id="ff8fe2ce-5180-4784-af03-d838a19994fd" processor="file:read" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="68acaf62-0179-4723-933b-3282a5059a85" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="Verify Logger" doc:id="c39118c5-82c6-4617-9525-372543ead8eb" processor="logger" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="43340730-0c23-4efd-9408-035021e1c7f4" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="bookCar-test" doc:id="bea3747a-11c6-482d-881b-f159bf589eb1" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="8d8260b4-cfe6-44f8-968a-786584249094" >
+				<munit:payload value="#[readUrl('classpath://bookCartest\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://bookCartest\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to bookCar" doc:id="5774e7ff-4fd5-4fbc-8187-0c3aa2791814" name="bookCar"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="f74fceae-410a-4f2b-9934-bd44da4e8c45" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import bookCartest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify Write" doc:id="a5ef31a0-e369-417b-a41e-55ac54dfbee1" processor="file:write" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="577a48b2-46e9-4a40-8751-b07d574879ac" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="Post-hourly-test" doc:id="6dcd78fa-8686-491a-a418-b7f29b5fe7d1" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Copy" doc:id="f7599afd-5a29-4caa-86f3-d3ecce87b1f5" processor="file:copy">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="457f6ea1-9eea-4a7a-b685-fb349753f1e8" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[readUrl('classpath://Posthourlytest\mock_payload.dwl')]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="6695e54d-88e6-4cea-b356-035f786be036" >
+				<munit:payload value="#[readUrl('classpath://Posthourlytest\set-event_payload.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to Post-hourly" doc:id="bfbfbce9-678e-490f-9933-0ddb34b1d23c" name="Post-hourly"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="75747323-92e3-46b9-a908-3bfa30b20464" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import Posthourlytest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

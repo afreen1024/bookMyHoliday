@@ -1,0 +1,14 @@
+http:
+  port : "8085"
+  
+db:
+   host: "mysql-54807-0.cloudclusters.net"
+   port: "13284"
+   username: "afreen"
+   password: "apisero123"
+   dbname: "bookMyHoliday"
+   
+car:
+  carDir:  "C:/Users/afreenfatma/AnypointStudio/studio-workspace/soap_test/src/main/resources/CarPartnerList"
+  carBook: "C:/Users/afreenfatma/AnypointStudio/studio-workspace/soap_test/src/main/resources/CarPartnerList/Booked"
+  carShare: "C:/Users/afreenfatma/AnypointStudio/studio-workspace/soap_test/src/main/resources/CarPartnerList/ToBeSheredWithPartners"

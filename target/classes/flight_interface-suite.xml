@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="flight_interface-suite.xml" />
+	<munit:test name="bookMyHolidayFlightApi-main-test" doc:id="aaca4ae0-d04d-4a94-a5ea-82c166b486d3" >
+		<munit:behavior >
+			<munit-tools:spy doc:name="Spy APIkit Router" doc:id="c8a718dc-2994-4984-a61a-83e5843355d1" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="17185d2c-dc8d-4d56-ad0f-a93cba538357" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="75e87b94-4344-4ef5-a250-940b770d6eaa" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import bookMyHolidayFlightApimaintest::spy_assert_payload
+---
+spy_assert_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:before-call>
+				<munit-tools:after-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="55f73bcd-b724-492b-9561-7189e86877ab" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import bookMyHolidayFlightApimaintest::spy_assert_payload1
+---
+spy_assert_payload1::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+			<munit:set-event doc:name="Set Input" doc:id="aba43370-b2f5-418c-8faa-49fc378e6782" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://bookMyHolidayFlightApimaintest\set-event_payload1.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://bookMyHolidayFlightApimaintest\set-event_attributes1.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to bookMyHolidayFlightApi-main" doc:id="7582f4db-0acf-4426-b617-b44281b86567" name="bookMyHolidayFlightApi-main"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="25a65c1c-9cde-46b5-bb9c-10129ea57b11" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import bookMyHolidayFlightApimaintest::assert_expression_payload1
+---
+assert_expression_payload1::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify APIkit Router" doc:id="cb55bc39-3d68-4e3a-b113-3be21863831d" processor="apikit:router" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="17185d2c-dc8d-4d56-ad0f-a93cba538357" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

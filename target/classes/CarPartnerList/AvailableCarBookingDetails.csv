@@ -1,0 +1,4 @@
+id,source,destination,cartype,carmodel,price,partnerName,contact,isbooked
+101,ABC,XYZ,Hatchback,Maruti Ritz,100,AfreenCars,2322323,false
+102,PPP,CCC,Hatchback,Maruti Swift,100,AkshayCars,2344444,false
+103,ABC,XYZ,Hatchback,Maruti Brezza,100,AkshayCars,2344444,false

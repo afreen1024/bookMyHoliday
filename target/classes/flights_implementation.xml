@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:netsuite="http://www.mulesoft.org/schema/mule/netsuite"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/netsuite http://www.mulesoft.org/schema/mule/netsuite/current/mule-netsuite.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="3c6df8dd-7bc8-4301-b870-4110f1e8f975" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.username}" password="${db.password}" database="${db.dbname}" />
+	</db:config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="0326a95b-1463-4d05-85ab-094b320a921a" />
+	<configuration doc:name="Configuration" doc:id="a94338ee-1b5e-47c0-b7bf-280537f6b5aa" defaultErrorHandler-ref="globalErrorHandlerError_Handler" />
+	<configuration-properties doc:name="Configuration properties" doc:id="e1c695ff-b585-492d-8ef3-41f0fa8aa6a0" file="config.yaml" />
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="978f1be7-2015-467d-8572-19b8e347160a" >
+		<email:smtp-connection host="smtp.mailtrap.io" user="1478a3e8257119" password="daa750215bfcfa" />
+	</email:smtp-config>
+	<flow name="getFlights" doc:id="99e3e2f5-95e9-4873-b631-4f8f5e59ae8f" >
+		<ee:cache doc:name="Cache" doc:id="07fa384a-1d45-414b-a7d1-6b9ada24827a" >
+			<db:select doc:name="Select" doc:id="9376268a-594d-4383-a569-dcdfe421853d" config-ref="Database_Config">
+			<db:sql><![CDATA[select  * from flightsDetails WHERE destination = :destination and origin = :origin]]></db:sql>
+			<db:input-parameters><![CDATA[#[{destination : attributes.queryParams.destination ,
+  origin : attributes.queryParams.origin
+}]]]></db:input-parameters>
+		</db:select>
+			<ee:transform doc:name="Transform Message" doc:id="e1a34b3a-56ad-4ec6-a5e5-57fd6b7bded6">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	flightsID: payload01.flightID default 0,
+	price: payload01.price default "",
+	departureDate: payload01.departureDate default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		</ee:cache>
+		<logger level="INFO" doc:name="Logger" doc:id="2a8b83dd-b9bc-4da4-8152-468c30e293b4" message="#[payload]"/>
+	</flow>
+	<flow name="postFlights" doc:id="13c80766-0223-4be6-8868-601a4dcc8f8b" >
+		<set-payload value="#[payload]" doc:name="detailsEnterByusers" doc:id="4fed1ca6-a7e6-45d6-af74-eac6a15dea5e" />
+		<os:store doc:name="Details store" doc:id="5730e6b1-9d61-4eb6-a50f-372f85be7e1a" key="bookflightdetails" objectStore="Object_store"/>
+		<set-variable value="#[payload.NoOfSeats]" doc:name="noOfseats" doc:id="d884dd04-d40d-4699-b346-4350c0c2ec6d" variableName="noOfseats"/>
+		<validation:is-not-null doc:name="Is not null checkForVariable" doc:id="3a956f5f-e312-4a46-aa01-c8f67d80cf31" value="#[vars.noOfseats]" message="The variable is blank."/>
+		<set-variable value="#[payload.id]" doc:name="flightCode" doc:id="b9e23d0e-4124-4fdb-8b5b-73f27de8e8f9" variableName="flightCode"/>
+		<validation:is-not-null doc:name="Is not null checkVariable" doc:id="69f4d279-63a4-43b6-9a09-2421880fb88d" value="#[vars.flightCode]" message="The flightCode variable is blank."/>
+		<flow-ref doc:name="toGetAlltheDetails" doc:id="80437982-e569-4d7f-ae7a-9826bfbe5121" name="getAllFlightsDetails"/>
+		<logger level="INFO" doc:name="Logger" doc:id="016a1738-bbdf-406a-9322-30fb1e92900f" message="#[payload.emptySeats]"/>
+		<try doc:name="Try" doc:id="3fae3e49-e034-435c-a40e-d7853b1372d7" >
+			<ee:transform doc:name="MatchedDetails" doc:id="ae2866bb-f904-4919-bb26-1f7b83d4cc60">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload filter ($.FlightID ~= vars.flightCode) map {
+	flightsID: $.FlightID,
+	price: $.price as Number * vars.noOfseats as Number,
+	departureDate: $.departureDate,
+	origin: $.origin,
+	destination: $.destination,
+	emptySeats: $.emptySeats as Number default 100,
+	BookingID: randomInt(1000) as String {
+		format: "#"
+	},
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="cc51494f-4a68-481d-a10c-9ee76b42feac" >
+					<set-payload value="#[payload]" doc:name="FlightDetails" doc:id="5ea6551c-f8c0-429b-b6c3-a847faa69c28" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="722fb6f9-8f24-4f9e-91a1-2e1ee277fb21" message="#[payload]"/>
+		<choice doc:name="Choice" doc:id="3318107d-e48a-4000-be41-8b5b7a947b4f">
+			<when expression='#[payload == "Flight not found!!" or payload == [&#10;	&#10;]]'>
+				<set-payload value="Flight Not Found" doc:name="FlightNotFound" doc:id="02def0d5-3c67-48c6-b78c-487d3478e258" />
+			</when>
+			<otherwise>
+				<flow-ref doc:name="FlightsValidation" doc:id="dc274508-f8b7-4163-ad7c-20bb3a4b0cf0" name="FlightValidation" />
+			</otherwise>
+		</choice>
+	</flow>
+	<sub-flow name="choiceFlow" doc:id="f2897dd7-a624-4eba-a1d5-3f6835584b87">
+		<os:retrieve doc:name="Retrievethedetails" doc:id="b7530dde-e29c-4562-9912-cec9384a614c" key="bookflightdetails" target="retrieve" objectStore="Object_store" />
+		<validation:is-not-null doc:name="Is not null OS" doc:id="fb56791a-019f-4c09-b2e6-f35efb21deac" value="#[payload]" message="Values are not getting retrive from ObjectStore"/>
+		<ee:transform doc:name="TotalDetails" doc:id="bb72700f-a324-43d9-bbea-98240014f1c3">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload[0] ++ vars.retrieve
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<flow-ref doc:name="insertBookedFlights" doc:id="4d5ed8b1-07bf-41e7-b520-5fce25ea7cc4" name="insertBookedFlights" />
+		<logger level="INFO" doc:name="Logger" doc:id="43ad66c0-fd6c-4dc4-9691-f97c19a5f348" message="#[payload]" />
+	</sub-flow>
+	<sub-flow name="FlightValidation" doc:id="bf9134cb-e55e-4caa-8e69-a30c3d1ad035">
+		<logger level="INFO" doc:name="Logger" doc:id="84ccc433-bbfd-452c-96d8-da8ee08f5f54" message="#[payload]"/>
+		<choice doc:name="Choice" doc:id="f24e100f-7f08-4626-b330-02a863fb6369">
+			<when expression="#[payload[0].emptySeats as Number &lt; vars.noOfseats]">
+				<set-payload value="Requested seats not available" doc:name="Seats Available" doc:id="295676ca-ca0a-49ff-a7ca-b1df06baf365" />
+			</when>
+			<otherwise>
+				<flow-ref doc:name="choiceFlow" doc:id="e9383bc9-bbce-4bde-9dcf-49eacfa4c384" name="choiceFlow" />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="insertBookedFlights" doc:id="592d9ec5-756f-4729-954c-4b63506e8d77">
+		<set-variable value="#[payload.BookingID]" doc:name="BookingID" doc:id="0e14a435-eddf-45e6-82d4-5c57a36984e7" variableName="BookingID" />
+		<validation:is-not-null doc:name="Is not null checkVariable" doc:id="d26b08a7-1e12-4a16-8259-3c85027b461b" value="#[vars.BookingID]" message="The Booking ID variable is blank." />
+		<set-variable value="#[payload.emptySeats]" doc:name="emptySeats" doc:id="d8fe938d-6e00-41e8-b85b-c07d281cd660" variableName="emptySeats" />
+		<validation:is-not-null doc:name="Is not null checkVariable" doc:id="ea781a59-e5f6-4dba-a9b6-edbc35a52794" value="#[vars.emptySeats]" message="The emptySeats variable is blank." />
+		<db:insert doc:name="BookingFlightDetails" doc:id="a51d51a1-27b8-4cf7-89ed-f5d9b94d3e47" config-ref="Database_Config">
+			<db:sql><![CDATA[INSERT INTO BookFlights(BookingID, LastName, FirstName, FlightID, NoOfSeats, emailID,price) VALUES (:BookingID,:LastName,:FirstName, :flightsID, :NoOfSeats, :emailID, :price)
+]]></db:sql>
+			<db:input-parameters><![CDATA[#[{BookingID : payload."BookingID"  ,
+  LastName : payload."LastName",
+  FirstName : payload."FirstName",
+  flightsID : payload."FlightID",
+  NoOfSeats :payload."NoOfSeats",
+  emailID : payload."emailID",
+  price : payload."price"
+}]]]></db:input-parameters>
+		</db:insert>
+		<db:update doc:name="UpdateTheRemainingSeats" doc:id="1c6b4b2c-efb6-482c-aad3-292301eca709" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE flightsDetails SET emptySeats= :emptySeats WHERE flightID =:flightID]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	"flightID" : vars.flightCode,
+	"emptySeats" : vars.emptySeats - vars.noOfseats
+	
+}]]]></db:input-parameters>
+		</db:update>
+		<ee:transform doc:name="Transform Message" doc:id="58539a1e-5745-4858-95a4-04ce6bf722b6">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{"message" : "Your flight is booked" ,
+ "BookingID" : vars.BookingID
+}
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<os:retrieve doc:name="EmailNotify" doc:id="03c90e99-22e3-47c3-bb66-d7205e87435d" key="bookflightdetails" objectStore="Object_store"/>
+		<email:send doc:name="Send" doc:id="8c929a5b-59fc-4476-80e5-03d8ab53cb6e" config-ref="Email_SMTP" fromAddress="afreen.fatma@gmail.com" subject="Booking Confirmed">
+			<email:to-addresses >
+				<email:to-address value="afreen.fatma@apisero.com" />
+				<email:to-address value="#[payload.emailID]" />
+			</email:to-addresses>
+			<email:body contentTransferEncoding="Quoted-Printable">
+				<email:content ><![CDATA[#["Your booking Id is " ++ vars.BookingID]]]></email:content>
+			</email:body>
+		</email:send>
+		<logger level="INFO" doc:name="Logger" doc:id="060ea89a-9aa6-4a7a-a8cf-41eb97ff5e79" message="#[payload]" />
+	</sub-flow>
+	<sub-flow name="getAllFlightsDetails" doc:id="8ce3a70d-aa05-4d52-847b-cdc4ce8e2733">
+		<ee:cache doc:name="Cache" doc:id="c8d0162d-0219-45b7-a6e1-59d37f5a4cec" >
+			<db:select doc:name="GetAllFlights" doc:id="9d78c181-dba8-42d0-9b9e-fb233b8b1e69" config-ref="Database_Config">
+			<db:sql><![CDATA[select  * from flightsDetails]]></db:sql>
+		</db:select>
+			<ee:transform doc:name="details" doc:id="476f60ec-367d-4629-a38a-28c31684eb6a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		</ee:cache>
+	</sub-flow>
+</mule>
